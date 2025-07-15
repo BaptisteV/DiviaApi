@@ -120,19 +120,6 @@ public class DiviaController {
         }
     }
 
-    @PostMapping("/init")
-    @Operation(summary = "Initialize API", description = "Manually initialize or refresh the API data")
-    @ApiResponse(responseCode = "200", description = "Successfully initialized API")
-    @ApiResponse(responseCode = "500", description = "Error during initialization")
-    public ResponseEntity<String> initializeApi() {
-        try {
-            diviaApiService.init();
-            return ResponseEntity.ok("API initialized successfully");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Failed to initialize API: " + e.getMessage());
-        }
-    }
-
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check if the API is healthy and initialized")
     @ApiResponse(responseCode = "200", description = "API is healthy")

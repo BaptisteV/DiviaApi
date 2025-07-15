@@ -2,6 +2,7 @@ package com.example.divia.service;
 
 import com.example.divia.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -27,55 +28,41 @@ public class DiviaApiService {
     private static final String TOTEM_API_URL = "https://www.divia.fr/bus-tram";
 
     private final WebClient webClient;
-    private final ObjectMapper objectMapper;
 
-    private ReseauData reseauData;
     private Map<String, Line> linesById;
     private Map<String, Stop> stopsById;
     private Map<String, List<Stop>> stopsByLineId;
 
-    public DiviaApiService(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
-        this.webClient = webClientBuilder.build();
-        this.objectMapper = objectMapper;
+    public DiviaApiService(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder
+                .codecs(configurer -> configurer
+                        .defaultCodecs()
+                        .maxInMemorySize(16 * 1024 * 1024)).build();
         this.linesById = new HashMap<>();
         this.stopsById = new HashMap<>();
         this.stopsByLineId = new HashMap<>();
     }
 
-    /**
-     * Initialize the API by loading network data from Divia
-     */
+    @PostConstruct
     public void init() {
         try {
             logger.info("Initializing Divia API...");
-
-            String json = webClient
-                    .mutate()
-                    .codecs(configurer -> configurer
-                            .defaultCodecs()
-                            .maxInMemorySize(16 * 1024 * 1024))
-                    .build()
+            ReseauData reseauData = webClient
                     .get()
                     .uri(RESEAU_API_URL)
                     .retrieve()
-                    .bodyToMono(String.class)
+                    .bodyToMono(ReseauData.class)
                     .block();
 
-            reseauData = objectMapper.readValue(json, ReseauData.class);
-
-            // Build lookup maps
-            buildLookupMaps();
-
-            logger.info("Divia API initialized successfully. Lines: {}, Stops: {}",
-                    linesById.size(), stopsById.size());
-
+            buildLookupMaps(reseauData);
+            logger.info("Divia API initialized successfully. Lines: {}, Stops: {}", linesById.size(), stopsById.size());
         } catch (Exception e) {
             logger.error("Failed to initialize Divia API", e);
             throw new RuntimeException("Failed to initialize Divia API", e);
         }
     }
 
-    private void buildLookupMaps() {
+    private void buildLookupMaps(ReseauData reseauData) {
         // Build lines map
         for (LigneData ligneData : reseauData.getLignes()) {
             Line line = new Line(ligneData);
@@ -104,7 +91,6 @@ public class DiviaApiService {
      * Get all lines
      */
     public List<Line> getLines() {
-        ensureInitialized();
         return new ArrayList<>(linesById.values());
     }
 
@@ -112,8 +98,6 @@ public class DiviaApiService {
      * Find a line by number and direction
      */
     public Optional<Line> findLine(String lineNumber, String direction) {
-        ensureInitialized();
-
         // Default direction is 'A' if not specified
         String searchDirection = (direction != null && !direction.isEmpty()) ? direction : "A";
 
@@ -127,7 +111,6 @@ public class DiviaApiService {
      * Get a line by its ID
      */
     public Optional<Line> getLine(String lineId) {
-        ensureInitialized();
         return Optional.ofNullable(linesById.get(lineId));
     }
 
@@ -149,7 +132,6 @@ public class DiviaApiService {
      * Get a stop by its ID
      */
     public Optional<Stop> getStop(String stopId) {
-        ensureInitialized();
         return Optional.ofNullable(stopsById.get(stopId));
     }
 
@@ -157,7 +139,6 @@ public class DiviaApiService {
      * Find stops by line ID
      */
     public List<Stop> getStopsByLineId(String lineId) {
-        ensureInitialized();
         return stopsByLineId.getOrDefault(lineId, new ArrayList<>());
     }
 
@@ -173,8 +154,6 @@ public class DiviaApiService {
      * Get next passages for a stop using the TOTEM service
      */
     public TotemResponse getTotem(String stopId, String lineId) {
-        ensureInitialized();
-
         if (!horairesExpired()) {
             LocalDateTime now = LocalDateTime.now();
             List<HoraireResponse> updatedHoraires = new ArrayList<>();
@@ -270,19 +249,5 @@ public class DiviaApiService {
         }
 
         return null;
-    }
-
-    private void ensureInitialized() {
-        if (reseauData == null) {
-            init();
-        }
-    }
-
-    /**
-     * Get the raw network data
-     */
-    public ReseauData getReseauData() {
-        ensureInitialized();
-        return reseauData;
     }
 }
