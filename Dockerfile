@@ -1,12 +1,11 @@
-# Stage 1: Build with Maven using Java 17
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
-COPY . .
-RUN mvn clean package
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Stage 2: Run with Java 17
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-Duser.timezone=Europe/Paris" ,"-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-jar", "app.jar"]
