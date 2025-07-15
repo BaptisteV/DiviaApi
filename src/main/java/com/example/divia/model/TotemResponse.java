@@ -17,8 +17,6 @@ public class TotemResponse {
         this.horaires = horaires;
     }
 
-    private String rawHtml;
-
     public TotemResponse(String stopId, String stopName, String lineId, String lineName) {
         this.stopId = stopId;
         this.stopName = stopName;
@@ -57,13 +55,5 @@ public class TotemResponse {
 
     public void setLineName(String lineName) {
         this.lineName = lineName;
-    }
-
-    public String getRawHtml() {
-        return rawHtml;
-    }
-
-    public void setRawHtml(String rawHtml) {
-        this.rawHtml = rawHtml;
     }
 }

@@ -9,10 +9,8 @@ public class HoraireResponse {
     @JsonProperty("arrivesAt")
     private LocalDateTime arrivesAt;
 
-    @JsonProperty("waitDurationMinutes")
-    private Double waitDurationMinutes;
-
-    private Duration waitDuration;
+    @JsonProperty("minutesLeft")
+    private Double minutesLeft;
 
     public HoraireResponse(LocalDateTime currentTime, LocalDateTime horaireTime) {
         this.arrivesAt = horaireTime;
@@ -24,8 +22,7 @@ public class HoraireResponse {
     }
 
     public void setWaitDuration(Duration waitDuration) {
-        this.waitDuration = waitDuration;
-        Double durationInMinute = this.waitDuration.toSeconds() / 60.0;
-        this.waitDurationMinutes = Math.round(durationInMinute * 100.0) / 100.0;
+        Double durationInMinute = waitDuration.toSeconds() / 60.0;
+        this.minutesLeft = Math.round(durationInMinute * 100.0) / 100.0;
     }
 }

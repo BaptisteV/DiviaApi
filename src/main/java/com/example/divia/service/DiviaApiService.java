@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class DiviaApiService {
-    private static final int TotemResponseCacheDurationInMinute = 5;
+    private static final int TotemResponseCacheDurationInMinute = 1;
     private static final Logger logger = LoggerFactory.getLogger(DiviaApiService.class);
 
     private static final String RESEAU_API_URL = "https://bo-api.divia.fr/api/reseau/type/json";
@@ -218,7 +218,6 @@ public class DiviaApiService {
             );
 
             LocalDateTime now = LocalDateTime.now();
-            totemResponse.setRawHtml(response);
             totemResponse.setHoraires(parseHoraireResponse(response, now));
 
             lastFetch = now;
