@@ -22,7 +22,7 @@ public class HoraireResponse {
     }
 
     public void setMinutesLeft(Duration waitDuration) {
-        Double durationInMinute = waitDuration.toSeconds() / 60.0;
+        double durationInMinute = waitDuration.toSeconds() / 60.0;
         this.minutesLeft = Math.round(durationInMinute * 100.0) / 100.0;
     }
 }

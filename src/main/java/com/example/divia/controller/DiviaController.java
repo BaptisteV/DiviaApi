@@ -4,6 +4,7 @@ import com.example.divia.model.Line;
 import com.example.divia.model.Stop;
 import com.example.divia.model.TotemResponse;
 import com.example.divia.service.DiviaApiService;
+import com.example.divia.service.HoraireFochService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,18 +21,18 @@ import java.util.Optional;
 public class DiviaController {
 
     private final DiviaApiService diviaApiService;
+    private final HoraireFochService fochService;
 
-    public DiviaController(DiviaApiService diviaApiService) {
+    public DiviaController(DiviaApiService diviaApiService, HoraireFochService fochService) {
         this.diviaApiService = diviaApiService;
+        this.fochService = fochService;
     }
 
     @GetMapping("/foch")
     @Operation(summary = "Get next passages Foch Gare => Valmy", description = "Get next passages at Foch Gare to Valmy")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved next passages Foch Gare => Valmy")
     public ResponseEntity<TotemResponse> getFoch() {
-        String stopId = "1467";
-        String lineId = "96";
-        TotemResponse totemResponse = diviaApiService.getTotem(stopId, lineId);
+        TotemResponse totemResponse = fochService.getFoch();
         return ResponseEntity.ok(totemResponse);
     }
 

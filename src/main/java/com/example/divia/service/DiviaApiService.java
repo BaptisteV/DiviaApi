@@ -1,7 +1,6 @@
 package com.example.divia.service;
 
 import com.example.divia.model.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -17,7 +16,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class DiviaApiService {
@@ -29,9 +27,9 @@ public class DiviaApiService {
 
     private final WebClient webClient;
 
-    private Map<String, Line> linesById;
-    private Map<String, Stop> stopsById;
-    private Map<String, List<Stop>> stopsByLineId;
+    private final Map<String, Line> linesById;
+    private final Map<String, Stop> stopsById;
+    private final Map<String, List<Stop>> stopsByLineId;
 
     public DiviaApiService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
@@ -119,13 +117,10 @@ public class DiviaApiService {
      */
     public Optional<Stop> findStop(String lineNumber, String stopName, String direction) {
         Optional<Line> line = findLine(lineNumber, direction);
-        if (line.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return line.get().getStops().stream()
+        return line.flatMap(value -> value.getStops().stream()
                 .filter(stop -> stopName.equals(stop.getName()))
-                .findFirst();
+                .findFirst());
+
     }
 
     /**
@@ -157,7 +152,7 @@ public class DiviaApiService {
         if (!horairesExpired()) {
             LocalDateTime now = LocalDateTime.now();
             List<HoraireResponse> updatedHoraires = new ArrayList<>();
-            for (LocalDateTime t : lastResponse.getHoraires().stream().map(s -> s.getArrivesAt()).toList()) {
+            for (LocalDateTime t : lastResponse.getHoraires().stream().map(HoraireResponse::getArrivesAt).toList()) {
                 updatedHoraires.add(new HoraireResponse(now, t));
             }
             lastResponse.setHoraires(updatedHoraires);
@@ -231,8 +226,7 @@ public class DiviaApiService {
             logger.warn("Failed to parse TOTEM response", e);
         }
 
-        return horaires.stream()
-                .collect(Collectors.toList());
+        return new ArrayList<>(horaires);
     }
 
     private LocalDateTime parseTimeString(String timeText) {
