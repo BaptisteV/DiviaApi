@@ -2,7 +2,6 @@ package com.example.divia;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication

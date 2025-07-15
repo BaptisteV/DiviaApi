@@ -1,6 +1,5 @@
 package com.example.divia.service;
 
-import com.example.divia.DiviaApiApplication;
 import com.example.divia.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jsoup.Jsoup;
@@ -9,24 +8,19 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cglib.core.Local;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class DiviaApiService {
-    private static final  int TotemResponseCacheDurationInMinute = 5;
+    private static final int TotemResponseCacheDurationInMinute = 5;
     private static final Logger logger = LoggerFactory.getLogger(DiviaApiService.class);
 
     private static final String RESEAU_API_URL = "https://bo-api.divia.fr/api/reseau/type/json";
@@ -168,22 +162,23 @@ public class DiviaApiService {
     }
 
     private LocalDateTime lastFetch = LocalDateTime.MIN;
-    private boolean horairesExpired()
-    {
+
+    private boolean horairesExpired() {
         return LocalDateTime.now().minusMinutes(TotemResponseCacheDurationInMinute).isAfter(lastFetch);
     }
 
     private TotemResponse lastResponse;
+
     /**
      * Get next passages for a stop using the TOTEM service
      */
     public TotemResponse getTotem(String stopId, String lineId) {
         ensureInitialized();
 
-        if(!horairesExpired()) {
+        if (!horairesExpired()) {
             LocalDateTime now = LocalDateTime.now();
             List<HoraireResponse> updatedHoraires = new ArrayList<>();
-            for (LocalDateTime t: lastResponse.getHoraires().stream().map(s -> s.getArrivesAt()).toList()){
+            for (LocalDateTime t : lastResponse.getHoraires().stream().map(s -> s.getArrivesAt()).toList()) {
                 updatedHoraires.add(new HoraireResponse(now, t));
             }
             lastResponse.setHoraires(updatedHoraires);

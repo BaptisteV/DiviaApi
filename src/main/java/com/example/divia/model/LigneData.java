@@ -1,12 +1,6 @@
 package com.example.divia.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.cglib.core.Local;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 // Line data from Divia API
 public class LigneData {
@@ -32,25 +26,60 @@ public class LigneData {
     private String terminus;
 
     // Getters and setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public String getId() {
+        return id;
+    }
 
-    public String getNom() { return nom;  }
-    public void setNom(String nom) { this.nom = nom; }
+    public void setId(String id) {
+        this.id = id;
+    }
 
-    public String getNum() { return num; }
-    public void setNum(String num) { this.num = num; }
+    public String getNom() {
+        return nom;
+    }
 
-    public String getCouleur() { return couleur; }
-    public void setCouleur(String couleur) { this.couleur = couleur; }
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
 
-    public String getSens() { return sens; }
-    public void setSens(String sens) { this.sens = sens; }
+    public String getNum() {
+        return num;
+    }
 
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
+    public void setNum(String num) {
+        this.num = num;
+    }
 
-    public String getTerminus() { return terminus; }
-    public void setTerminus(String terminus) { this.terminus = terminus; }
+    public String getCouleur() {
+        return couleur;
+    }
+
+    public void setCouleur(String couleur) {
+        this.couleur = couleur;
+    }
+
+    public String getSens() {
+        return sens;
+    }
+
+    public void setSens(String sens) {
+        this.sens = sens;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getTerminus() {
+        return terminus;
+    }
+
+    public void setTerminus(String terminus) {
+        this.terminus = terminus;
+    }
 }
 

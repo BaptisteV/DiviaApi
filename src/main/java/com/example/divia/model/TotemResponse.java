@@ -1,7 +1,5 @@
 package com.example.divia.model;
 
-import java.lang.reflect.Array;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class TotemResponse {

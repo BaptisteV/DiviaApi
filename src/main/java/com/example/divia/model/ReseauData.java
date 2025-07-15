@@ -26,6 +26,7 @@ public class ReseauData {
     public List<ArretData> getArrets() {
         return new ArrayList<>(arrets.values());
     }
+
     public void setArrets(Map<String, ArretData> arrets) {
         this.arrets = arrets;
     }
