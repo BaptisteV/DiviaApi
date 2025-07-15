@@ -14,14 +14,14 @@ public class HoraireResponse {
 
     public HoraireResponse(LocalDateTime currentTime, LocalDateTime horaireTime) {
         this.arrivesAt = horaireTime;
-        setWaitDuration(Duration.between(currentTime, horaireTime));
+        setMinutesLeft(Duration.between(currentTime, horaireTime));
     }
 
     public LocalDateTime getArrivesAt() {
         return arrivesAt;
     }
 
-    public void setWaitDuration(Duration waitDuration) {
+    public void setMinutesLeft(Duration waitDuration) {
         Double durationInMinute = waitDuration.toSeconds() / 60.0;
         this.minutesLeft = Math.round(durationInMinute * 100.0) / 100.0;
     }
