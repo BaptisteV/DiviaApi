@@ -1,10 +1,10 @@
 package com.example.divia.controller;
 
-import com.example.divia.model.Line;
-import com.example.divia.model.Stop;
-import com.example.divia.model.TotemResponse;
+import com.example.divia.model.MorningResponse;
+import com.example.divia.model.divia.Line;
+import com.example.divia.model.divia.Stop;
 import com.example.divia.service.DiviaApiService;
-import com.example.divia.service.HoraireFochService;
+import com.example.divia.service.MorningService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,19 +21,19 @@ import java.util.Optional;
 public class DiviaController {
 
     private final DiviaApiService diviaApiService;
-    private final HoraireFochService fochService;
+    private final MorningService morningService;
 
-    public DiviaController(DiviaApiService diviaApiService, HoraireFochService fochService) {
+    public DiviaController(DiviaApiService diviaApiService, MorningService morningService) {
         this.diviaApiService = diviaApiService;
-        this.fochService = fochService;
+        this.morningService = morningService;
     }
 
-    @GetMapping("/foch")
+    @GetMapping("/morning")
     @Operation(summary = "Get next passages Foch Gare => Valmy", description = "Get next passages at Foch Gare to Valmy")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved next passages Foch Gare => Valmy")
-    public ResponseEntity<TotemResponse> getFoch() {
-        TotemResponse totemResponse = fochService.getFoch();
-        return ResponseEntity.ok(totemResponse);
+    public ResponseEntity<MorningResponse> getMorning() {
+        MorningResponse morning = morningService.getMorning();
+        return ResponseEntity.ok(morning);
     }
 
     @GetMapping("/lines")
@@ -100,25 +100,6 @@ public class DiviaController {
             @Parameter(description = "Line ID") @PathVariable String lineId) {
         List<Stop> stops = diviaApiService.getStopsByLineId(lineId);
         return ResponseEntity.ok(stops);
-    }
-
-    @GetMapping("/totem")
-    @Operation(summary = "Get next passages",
-            description = "Get next bus/tram passages for a specific stop and line using TOTEM service")
-    @ApiResponse(responseCode = "200", description = "Successfully retrieved next passages")
-    @ApiResponse(responseCode = "400", description = "Invalid stop ID or line ID")
-    @ApiResponse(responseCode = "500", description = "Error retrieving TOTEM data")
-    public ResponseEntity<TotemResponse> getTotem(
-            @Parameter(description = "Stop ID") @RequestParam String stopId,
-            @Parameter(description = "Line ID") @RequestParam String lineId) {
-        try {
-            TotemResponse totemResponse = diviaApiService.getTotem(stopId, lineId);
-            return ResponseEntity.ok(totemResponse);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
     }
 
     @GetMapping("/health")

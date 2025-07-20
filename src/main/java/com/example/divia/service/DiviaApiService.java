@@ -1,6 +1,7 @@
 package com.example.divia.service;
 
-import com.example.divia.model.*;
+import com.example.divia.SimpleCache;
+import com.example.divia.model.divia.*;
 import jakarta.annotation.PostConstruct;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -19,7 +20,7 @@ import java.util.*;
 
 @Service
 public class DiviaApiService {
-    private static final int TotemResponseCacheDurationInMinute = 1;
+    private static final int TotemResponseCacheDurationInSeconds = 60;
     private static final Logger logger = LoggerFactory.getLogger(DiviaApiService.class);
 
     private static final String RESEAU_API_URL = "https://bo-api.divia.fr/api/reseau/type/json";
@@ -35,14 +36,15 @@ public class DiviaApiService {
         this.webClient = webClientBuilder
                 .codecs(configurer -> configurer
                         .defaultCodecs()
-                        .maxInMemorySize(16 * 1024 * 1024)).build();
+                        .maxInMemorySize(8 * 1024 * 1024)).build();
         this.linesById = new HashMap<>();
         this.stopsById = new HashMap<>();
         this.stopsByLineId = new HashMap<>();
+        this.cache = new SimpleCache<TotemResponse>(() -> getTotemFromApi(), TotemResponseCacheDurationInSeconds);
     }
 
     @PostConstruct
-    public void init() {
+    private void init() {
         try {
             logger.info("Initializing Divia API...");
             ReseauData reseauData = webClient
@@ -53,6 +55,7 @@ public class DiviaApiService {
                     .block();
 
             buildLookupMaps(reseauData);
+            cache.Set(getTotemFromApi());
             logger.info("Divia API initialized successfully. Lines: {}, Stops: {}", linesById.size(), stopsById.size());
         } catch (Exception e) {
             logger.error("Failed to initialize Divia API", e);
@@ -85,16 +88,10 @@ public class DiviaApiService {
         }
     }
 
-    /**
-     * Get all lines
-     */
     public List<Line> getLines() {
         return new ArrayList<>(linesById.values());
     }
 
-    /**
-     * Find a line by number and direction
-     */
     public Optional<Line> findLine(String lineNumber, String direction) {
         // Default direction is 'A' if not specified
         String searchDirection = (direction != null && !direction.isEmpty()) ? direction : "A";
@@ -105,16 +102,10 @@ public class DiviaApiService {
                 .findFirst();
     }
 
-    /**
-     * Get a line by its ID
-     */
     public Optional<Line> getLine(String lineId) {
         return Optional.ofNullable(linesById.get(lineId));
     }
 
-    /**
-     * Find a stop by line number, stop name, and direction
-     */
     public Optional<Stop> findStop(String lineNumber, String stopName, String direction) {
         Optional<Line> line = findLine(lineNumber, direction);
         return line.flatMap(value -> value.getStops().stream()
@@ -123,85 +114,59 @@ public class DiviaApiService {
 
     }
 
-    /**
-     * Get a stop by its ID
-     */
     public Optional<Stop> getStop(String stopId) {
         return Optional.ofNullable(stopsById.get(stopId));
     }
 
-    /**
-     * Find stops by line ID
-     */
     public List<Stop> getStopsByLineId(String lineId) {
         return stopsByLineId.getOrDefault(lineId, new ArrayList<>());
     }
 
-    private LocalDateTime lastFetch = LocalDateTime.MIN;
+    private final static String stopIdFoch = "1467";
+    private final static String lineIdFochToValmy = "96";
 
-    private boolean horairesExpired() {
-        return LocalDateTime.now().minusMinutes(TotemResponseCacheDurationInMinute).isAfter(lastFetch);
+    private final SimpleCache<TotemResponse> cache;
+
+    public TotemResponse getTotem() {
+        TotemResponse response = cache.Get();
+        response.refreshMinutesLeft();
+        return response;
     }
 
-    private TotemResponse lastResponse;
-
-    /**
-     * Get next passages for a stop using the TOTEM service
-     */
-    public TotemResponse getTotem(String stopId, String lineId) {
-        if (!horairesExpired()) {
-            LocalDateTime now = LocalDateTime.now();
-            List<HoraireResponse> updatedHoraires = new ArrayList<>();
-            for (LocalDateTime t : lastResponse.getHoraires().stream().map(HoraireResponse::getArrivesAt).toList()) {
-                updatedHoraires.add(new HoraireResponse(now, t));
-            }
-            lastResponse.setHoraires(updatedHoraires);
-            return lastResponse;
-        }
-
-        Optional<Stop> stop = getStop(stopId);
-        Optional<Line> line = getLine(lineId);
+    public TotemResponse getTotemFromApi() {
+        Optional<Stop> stop = getStop(stopIdFoch);
+        Optional<Line> line = getLine(lineIdFochToValmy);
 
         if (stop.isEmpty() || line.isEmpty()) {
             throw new IllegalArgumentException("Stop or line not found");
         }
 
-        try {
-            // Prepare form data
-            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-            formData.add("requete", "arret_prochainpassage");
-            formData.add("requete_val[id_ligne]", lineId);
-            formData.add("requete_val[id_arret]", stopId);
+        // Prepare form data
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("requete", "arret_prochainpassage");
+        formData.add("requete_val[id_ligne]", lineIdFochToValmy);
+        formData.add("requete_val[id_arret]", stopIdFoch);
 
-            // Make POST request to TOTEM API
-            String response = webClient.post()
-                    .uri(TOTEM_API_URL + "?type=479")
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .header("X-Requested-With", "XMLHttpRequest")
-                    .body(BodyInserters.fromFormData(formData))
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+        String response = webClient.post()
+                .uri(TOTEM_API_URL + "?type=479")
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .body(BodyInserters.fromFormData(formData))
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
 
-            // Parse the HTML response
-            TotemResponse totemResponse = new TotemResponse(
-                    stopId,
-                    stop.get().getName(),
-                    lineId,
-                    line.get().getName()
-            );
+        TotemResponse totemResponse = new TotemResponse(
+                stopIdFoch,
+                stop.get().getName(),
+                lineIdFochToValmy,
+                line.get().getName()
+        );
 
-            LocalDateTime now = LocalDateTime.now();
-            totemResponse.setHoraires(parseHoraireResponse(response, now));
+        LocalDateTime now = LocalDateTime.now();
+        totemResponse.setHoraires(parseHoraireResponse(response, now));
 
-            lastFetch = now;
-            lastResponse = totemResponse;
-            return totemResponse;
-
-        } catch (Exception e) {
-            logger.error("Failed to get TOTEM data for stop {} on line {}", stopId, lineId, e);
-            throw new RuntimeException("Failed to get TOTEM data", e);
-        }
+        return totemResponse;
     }
 
     private List<HoraireResponse> parseHoraireResponse(String html, LocalDateTime receivedAt) {
@@ -216,7 +181,7 @@ public class DiviaApiService {
                 String timeText = element.text().trim();
 
                 LocalDateTime passage = parseTimeString(timeText);
-                HoraireResponse horaire = new HoraireResponse(receivedAt, passage);
+                HoraireResponse horaire = new HoraireResponse(passage, receivedAt);
 
                 if (passage != null) {
                     horaires.add(horaire);

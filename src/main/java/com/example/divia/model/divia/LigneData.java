@@ -1,8 +1,7 @@
-package com.example.divia.model;
+package com.example.divia.model.divia;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-// Line data from Divia API
 public class LigneData {
     @JsonProperty("id")
     private String id;
@@ -25,61 +24,32 @@ public class LigneData {
     @JsonProperty("terminus")
     private String terminus;
 
-    // Getters and setters
     public String getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getNom() {
         return nom;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
-
     public String getNum() {
         return num;
-    }
-
-    public void setNum(String num) {
-        this.num = num;
     }
 
     public String getCouleur() {
         return couleur;
     }
 
-    public void setCouleur(String couleur) {
-        this.couleur = couleur;
-    }
-
     public String getSens() {
         return sens;
-    }
-
-    public void setSens(String sens) {
-        this.sens = sens;
     }
 
     public String getType() {
         return type;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public String getTerminus() {
         return terminus;
-    }
-
-    public void setTerminus(String terminus) {
-        this.terminus = terminus;
     }
 }
 

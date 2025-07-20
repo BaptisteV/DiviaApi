@@ -1,4 +1,4 @@
-package com.example.divia.model;
+package com.example.divia.model.divia;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -12,17 +12,13 @@ public class HoraireResponse {
     @JsonProperty("minutesLeft")
     private Double minutesLeft;
 
-    public HoraireResponse(LocalDateTime currentTime, LocalDateTime horaireTime) {
+    public HoraireResponse(LocalDateTime horaireTime, LocalDateTime currentTime) {
         this.arrivesAt = horaireTime;
-        setMinutesLeft(Duration.between(currentTime, horaireTime));
+        setMinutesLeft(currentTime);
     }
 
-    public LocalDateTime getArrivesAt() {
-        return arrivesAt;
-    }
-
-    public void setMinutesLeft(Duration waitDuration) {
-        double durationInMinute = waitDuration.toSeconds() / 60.0;
+    public void setMinutesLeft(LocalDateTime currentTime) {
+        double durationInMinute = Duration.between(currentTime, this.arrivesAt).toSeconds() / 60.0;
         this.minutesLeft = Math.round(durationInMinute * 100.0) / 100.0;
     }
 }
