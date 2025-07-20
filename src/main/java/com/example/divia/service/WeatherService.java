@@ -1,7 +1,7 @@
 package com.example.divia.service;
 
 import com.example.divia.SimpleCache;
-import com.example.divia.model.openmeteo.MeteoApiResponse;
+import com.example.divia.model.openmeteo.MeteoResponse;
 import jakarta.annotation.PostConstruct;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 public class WeatherService {
     private static final int MeteoCacheDurationInSeconds = 60 * 60;
-    private final SimpleCache<MeteoApiResponse> weatherCache;
+    private final SimpleCache<MeteoResponse> weatherCache;
     private final WebClient webClient;
 
     private final static double dijonLat = 47.33;
@@ -20,16 +20,16 @@ public class WeatherService {
         this.webClient = webClientBuilder
                 .baseUrl("https://api.open-meteo.com")
                 .build();
-        this.weatherCache = new SimpleCache<MeteoApiResponse>(() -> getWeatherFromApi(), MeteoCacheDurationInSeconds);
+        this.weatherCache = new SimpleCache<MeteoResponse>(this::getWeatherFromApi, MeteoCacheDurationInSeconds);
     }
 
     @PostConstruct
     private void init() {
-        MeteoApiResponse weather = getWeatherFromApi();
+        MeteoResponse weather = getWeatherFromApi();
         this.weatherCache.Set(weather);
     }
 
-    private MeteoApiResponse getWeatherFromApi() {
+    private MeteoResponse getWeatherFromApi() {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/v1/forecast")
@@ -39,11 +39,11 @@ public class WeatherService {
                         .build())
                 .accept(MediaType.APPLICATION_JSON)  // 👈 Explicitly set acceptable response type
                 .retrieve()
-                .bodyToMono(MeteoApiResponse.class)
+                .bodyToMono(MeteoResponse.class)
                 .block();
     }
 
-    public MeteoApiResponse getWeather() {
+    public MeteoResponse getWeather() {
         return weatherCache.Get();
     }
 }

@@ -20,17 +20,20 @@ import java.util.*;
 
 @Service
 public class DiviaApiService {
+    private final static String stopIdFoch = "1467";
+    private final static String lineIdFochToValmy = "96";
     private static final int TotemResponseCacheDurationInSeconds = 60;
-    private static final Logger logger = LoggerFactory.getLogger(DiviaApiService.class);
-
-    private static final String RESEAU_API_URL = "https://bo-api.divia.fr/api/reseau/type/json";
-    private static final String TOTEM_API_URL = "https://www.divia.fr/bus-tram";
+    private final SimpleCache<TotemResponse> cache;
 
     private final WebClient webClient;
+    private static final String RESEAU_API_URL = "https://bo-api.divia.fr/api/reseau/type/json";
+    private static final String TOTEM_API_URL = "https://www.divia.fr/bus-tram";
 
     private final Map<String, Line> linesById;
     private final Map<String, Stop> stopsById;
     private final Map<String, List<Stop>> stopsByLineId;
+
+    private static final Logger logger = LoggerFactory.getLogger(DiviaApiService.class);
 
     public DiviaApiService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
@@ -40,13 +43,14 @@ public class DiviaApiService {
         this.linesById = new HashMap<>();
         this.stopsById = new HashMap<>();
         this.stopsByLineId = new HashMap<>();
-        this.cache = new SimpleCache<TotemResponse>(() -> getTotemFromApi(), TotemResponseCacheDurationInSeconds);
+        this.cache = new SimpleCache<>(this::getTotemFromApi, TotemResponseCacheDurationInSeconds);
     }
 
     @PostConstruct
     private void init() {
         try {
             logger.info("Initializing Divia API...");
+
             ReseauData reseauData = webClient
                     .get()
                     .uri(RESEAU_API_URL)
@@ -55,6 +59,7 @@ public class DiviaApiService {
                     .block();
 
             buildLookupMaps(reseauData);
+
             cache.Set(getTotemFromApi());
             logger.info("Divia API initialized successfully. Lines: {}, Stops: {}", linesById.size(), stopsById.size());
         } catch (Exception e) {
@@ -71,12 +76,11 @@ public class DiviaApiService {
         }
 
         // Build stops map and associate with lines
-        for (ArretData arretData : reseauData.getArrets()) {
-            Stop stop = new Stop(arretData);
-            stopsById.put(arretData.getId(), stop);
+        for (Stop stop : reseauData.getStops()) {
+            stopsById.put(stop.getId(), stop);
 
             // Group stops by line
-            stopsByLineId.computeIfAbsent(arretData.getIdLigne(), k -> new ArrayList<>()).add(stop);
+            stopsByLineId.computeIfAbsent(stop.getIdLigne(), k -> new ArrayList<>()).add(stop);
         }
 
         // Set stops for each line
@@ -109,9 +113,8 @@ public class DiviaApiService {
     public Optional<Stop> findStop(String lineNumber, String stopName, String direction) {
         Optional<Line> line = findLine(lineNumber, direction);
         return line.flatMap(value -> value.getStops().stream()
-                .filter(stop -> stopName.equals(stop.getName()))
+                .filter(stop -> stopName.equals(stop.getNom()))
                 .findFirst());
-
     }
 
     public Optional<Stop> getStop(String stopId) {
@@ -121,11 +124,6 @@ public class DiviaApiService {
     public List<Stop> getStopsByLineId(String lineId) {
         return stopsByLineId.getOrDefault(lineId, new ArrayList<>());
     }
-
-    private final static String stopIdFoch = "1467";
-    private final static String lineIdFochToValmy = "96";
-
-    private final SimpleCache<TotemResponse> cache;
 
     public TotemResponse getTotem() {
         TotemResponse response = cache.Get();
@@ -147,26 +145,25 @@ public class DiviaApiService {
         formData.add("requete_val[id_ligne]", lineIdFochToValmy);
         formData.add("requete_val[id_arret]", stopIdFoch);
 
-        String response = webClient.post()
+        return webClient.post()
                 .uri(TOTEM_API_URL + "?type=479")
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("X-Requested-With", "XMLHttpRequest")
                 .body(BodyInserters.fromFormData(formData))
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
+                .map(response -> {
+                    TotemResponse totemResponse = new TotemResponse(
+                            stopIdFoch,
+                            stop.get().getNom(),
+                            lineIdFochToValmy,
+                            line.get().getName()
+                    );
 
-        TotemResponse totemResponse = new TotemResponse(
-                stopIdFoch,
-                stop.get().getName(),
-                lineIdFochToValmy,
-                line.get().getName()
-        );
-
-        LocalDateTime now = LocalDateTime.now();
-        totemResponse.setHoraires(parseHoraireResponse(response, now));
-
-        return totemResponse;
+                    LocalDateTime now = LocalDateTime.now();
+                    totemResponse.setHoraires(parseHoraireResponse(response, now));
+                    return totemResponse;
+                }).block();
     }
 
     private List<HoraireResponse> parseHoraireResponse(String html, LocalDateTime receivedAt) {

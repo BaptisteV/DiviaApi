@@ -11,13 +11,13 @@ public class ReseauData {
     private Map<String, LigneData> lignes;
 
     @JsonProperty("arrets")
-    private Map<String, ArretData> arrets;
+    private Map<String, Stop> arrets;
 
     public List<LigneData> getLignes() {
         return new ArrayList<>(lignes.values());
     }
 
-    public List<ArretData> getArrets() {
+    public List<Stop> getStops() {
         return new ArrayList<>(arrets.values());
     }
 }

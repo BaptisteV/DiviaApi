@@ -2,7 +2,7 @@ package com.example.divia.model.openmeteo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MeteoApiResponse {
+public class MeteoResponse {
     @JsonProperty("latitude")
     private double latitude;
 

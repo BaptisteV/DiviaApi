@@ -2,7 +2,7 @@ package com.example.divia.service;
 
 import com.example.divia.model.MorningResponse;
 import com.example.divia.model.divia.TotemResponse;
-import com.example.divia.model.openmeteo.MeteoApiResponse;
+import com.example.divia.model.openmeteo.MeteoResponse;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,7 +17,7 @@ public class MorningService {
 
     public MorningResponse getMorning() {
         TotemResponse totem = diviaApiService.getTotem();
-        MeteoApiResponse weather = weatherService.getWeather();
+        MeteoResponse weather = weatherService.getWeather();
         return new MorningResponse(totem, weather);
     }
 }
