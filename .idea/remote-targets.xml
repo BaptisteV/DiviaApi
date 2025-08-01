@@ -34,6 +34,8 @@
                 </option>
               </VolumeState>
             </option>
+            <option name="homePath" value="/opt/java/openjdk" />
+            <option name="javaVersionString" value="21.0.7" />
           </config>
         </ContributedStateBase>
         <ContributedStateBase type="MavenRuntime">

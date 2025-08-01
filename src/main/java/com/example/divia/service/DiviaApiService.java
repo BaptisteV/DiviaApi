@@ -58,6 +58,7 @@ public class DiviaApiService {
                     .bodyToMono(ReseauData.class)
                     .block();
 
+            assert reseauData != null;
             buildLookupMaps(reseauData);
 
             cache.Set(getTotemFromApi());

@@ -20,7 +20,7 @@ public class WeatherService {
         this.webClient = webClientBuilder
                 .baseUrl("https://api.open-meteo.com")
                 .build();
-        this.weatherCache = new SimpleCache<MeteoResponse>(this::getWeatherFromApi, MeteoCacheDurationInSeconds);
+        this.weatherCache = new SimpleCache<>(this::getWeatherFromApi, MeteoCacheDurationInSeconds);
     }
 
     @PostConstruct
