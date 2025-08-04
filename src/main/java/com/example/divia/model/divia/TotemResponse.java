@@ -34,7 +34,7 @@ public class TotemResponse {
     public void refreshMinutesLeft() {
         LocalDateTime now = LocalDateTime.now();
         for (HoraireResponse horaire : horaires) {
-            horaire.setMinutesLeft(now);
+            horaire.setTimeLeft(now);
         }
     }
 }

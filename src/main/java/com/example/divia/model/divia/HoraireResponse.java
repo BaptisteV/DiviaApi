@@ -10,15 +10,19 @@ public class HoraireResponse {
     private LocalDateTime arrivesAt;
 
     @JsonProperty("minutesLeft")
-    private Double minutesLeft;
+    private long minutesLeft;
+
+    @JsonProperty("secondsLeft")
+    private long secondsLeft;
 
     public HoraireResponse(LocalDateTime horaireTime, LocalDateTime currentTime) {
         this.arrivesAt = horaireTime;
-        setMinutesLeft(currentTime);
+        setTimeLeft(currentTime);
     }
 
-    public void setMinutesLeft(LocalDateTime currentTime) {
-        double durationInMinute = Duration.between(currentTime, this.arrivesAt).toSeconds() / 60.0;
-        this.minutesLeft = Math.round(durationInMinute * 100.0) / 100.0;
+    public void setTimeLeft(LocalDateTime currentTime) {
+        var duration = Duration.between(currentTime, this.arrivesAt);
+        this.secondsLeft = duration.getSeconds() % 60;
+        this.minutesLeft = duration.toMinutes();
     }
 }
