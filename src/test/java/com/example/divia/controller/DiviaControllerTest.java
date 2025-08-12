@@ -1,26 +1,31 @@
 package com.example.divia.controller;
 
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.nio.file.Paths;
+
 @Testcontainers
+@SpringBootTest
 public class DiviaControllerTest {
-    private static final int PORT = 6379;
-    //@Container
-    //private static final GenericContainer container = new GenericContainer(DockerImageName.parse("eclipse-temurin:21-alpine")).withExposedPorts(PORT);
+    //private static final int PORT = 8080;
 
+    //. withDockerfile(Path.of("../../../Dockerfile"))).withExposedPorts(PORT)
     @Container
-    private static final GenericContainer appContainer = new GenericContainer(new ImageFromDockerfile());
-    private final WebClient webClient;
+    private static final GenericContainer appContainer = new GenericContainer(new ImageFromDockerfile().withDockerfile(Paths.get(System.getProperty("user.dir") + "/Dockerfile")));
+    private final WebClient.Builder webClientBuilder;
 
-    public DiviaControllerTest(WebClient.Builder webClientBuilder){
-        this.webClient = webClientBuilder.baseUrl("http://" + appContainer.getHost() + ":" + "8080" + "/api/v1").build();
+    @Autowired
+    DiviaControllerTest(WebClient.Builder webClientBuilder){
+        this.webClientBuilder = webClientBuilder;
     }
-    
+
     @BeforeAll
     static void beforeAll() {
         appContainer.start();
@@ -42,6 +47,7 @@ public class DiviaControllerTest {
 
     @Test
     void getMorning() {
-        String res = webClient.get().uri("/morning").retrieve().bodyToMono(String.class).block();
+        var client = webClientBuilder.baseUrl("http://" + appContainer.getHost() + "/api/v1").build();
+        String res = client.get().uri("/morning").retrieve().bodyToMono(String.class).block();
     }
 }

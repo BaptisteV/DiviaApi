@@ -1,5 +1,6 @@
 package com.example.divia.controller;
 
+import com.example.divia.model.FochResponse;
 import com.example.divia.model.MorningResponse;
 import com.example.divia.model.divia.Line;
 import com.example.divia.model.divia.Stop;
@@ -29,11 +30,19 @@ public class DiviaController {
     }
 
     @GetMapping("/morning")
-    @Operation(summary = "Get next passages Foch Gare => Valmy", description = "Get next passages at Foch Gare to Valmy")
-    @ApiResponse(responseCode = "200", description = "Successfully retrieved next passages Foch Gare => Valmy")
-    public ResponseEntity<MorningResponse> getMorning() {
+    @Operation(summary = "Get next passages Foch Gare => Valmy and weather", description = "Get next passages at Foch Gare to Valmy and weather")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved next passages Foch Gare => Valmy and weather")
+    public ResponseEntity<Object> getMorning() {
         MorningResponse morning = morningService.getMorning();
         return ResponseEntity.ok(morning);
+    }
+
+    @GetMapping("/foch")
+    @Operation(summary = "Get next passages Foch Gare => Valmy", description = "Get next passages at Foch Gare to Valmy")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved next passages Foch Gare => Valmy")
+    public ResponseEntity<FochResponse> getFoch() {
+        FochResponse foch = morningService.getFoch();
+        return ResponseEntity.ok(foch);
     }
 
     @GetMapping("/lines")

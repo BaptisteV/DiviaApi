@@ -3,7 +3,7 @@
   <component name="RemoteTargetsManager">
     <option name="projectDefaultTargetUuid" value="78ea138f-a4af-45be-a4f0-71b849435573" />
     <targets>
-      <target name="Docker" type="docker" uuid="78ea138f-a4af-45be-a4f0-71b849435573">
+      <target name="DockerTarget" type="docker" uuid="78ea138f-a4af-45be-a4f0-71b849435573">
         <config>
           <option name="targetPlatform">
             <TargetPlatform />

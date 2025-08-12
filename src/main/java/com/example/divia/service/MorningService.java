@@ -1,5 +1,6 @@
 package com.example.divia.service;
 
+import com.example.divia.model.FochResponse;
 import com.example.divia.model.MorningResponse;
 import com.example.divia.model.divia.TotemResponse;
 import com.example.divia.model.openmeteo.MeteoResponse;
@@ -19,5 +20,10 @@ public class MorningService {
         TotemResponse totem = diviaApiService.getTotem();
         MeteoResponse weather = weatherService.getWeather();
         return new MorningResponse(totem, weather);
+    }
+
+    public FochResponse getFoch() {
+        TotemResponse totem = diviaApiService.getTotem();
+        return new FochResponse(totem);
     }
 }
