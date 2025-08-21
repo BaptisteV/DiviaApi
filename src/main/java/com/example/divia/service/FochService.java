@@ -3,7 +3,6 @@ package com.example.divia.service;
 import com.example.divia.SimpleCache;
 import com.example.divia.model.FochResponse;
 import com.example.divia.model.divia.HoraireResponse;
-import com.example.divia.model.FochGare;
 import com.example.divia.model.divia.TotemResponse;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,6 +22,10 @@ import java.util.List;
 
 @Service
 public class FochService {
+    private final String lineId = "96";
+    private final String lineName = " > DIJON Valmy";
+    private final String stopId = "1467";
+    private final String stopName = "Foch Gare";
     private static final int TotemResponseCacheDurationInSeconds = 60;
     private final SimpleCache<TotemResponse> cache;
 
@@ -46,12 +49,11 @@ public class FochService {
     }
 
     private TotemResponse getTotemFromApi() {
-        FochGare foch = new FochGare();
         // Prepare form data
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("requete", "arret_prochainpassage");
-        formData.add("requete_val[id_ligne]", foch.getLineId());
-        formData.add("requete_val[id_arret]", foch.getStopId());
+        formData.add("requete_val[id_ligne]", lineId);
+        formData.add("requete_val[id_arret]", stopId);
 
         return webClient.post()
                 .uri(TOTEM_API_URL + "?type=479")
@@ -62,10 +64,10 @@ public class FochService {
                 .bodyToMono(String.class)
                 .map(response -> {
                     TotemResponse totemResponse = new TotemResponse(
-                            foch.getStopId(),
-                            foch.getStopName(),
-                            foch.getLineId(),
-                            foch.getLineName()
+                            stopId,
+                            stopName,
+                            lineId,
+                            lineName
                     );
 
                     LocalDateTime now = LocalDateTime.now();

@@ -22,7 +22,6 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
         long start = System.currentTimeMillis();
-
         try {
             filterChain.doFilter(request, response);
         } finally {
