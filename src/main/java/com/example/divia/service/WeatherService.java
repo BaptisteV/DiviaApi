@@ -1,7 +1,7 @@
 package com.example.divia.service;
 
 import com.example.divia.SimpleCache;
-import com.example.divia.model.openmeteo.MeteoResponse;
+import com.example.divia.model.openmeteo.WeatherResponse;
 import jakarta.annotation.PostConstruct;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Service
 public class WeatherService {
     private static final int MeteoCacheDurationInSeconds = 60 * 60;
-    private final SimpleCache<MeteoResponse> weatherCache;
+    private final SimpleCache<WeatherResponse> weatherCache;
     private final WebClient webClient;
 
     private final static double dijonLat = 47.33;
@@ -25,11 +25,11 @@ public class WeatherService {
 
     @PostConstruct
     private void init() {
-        MeteoResponse weather = getWeatherFromApi();
+        WeatherResponse weather = getWeatherFromApi();
         this.weatherCache.Set(weather);
     }
 
-    private MeteoResponse getWeatherFromApi() {
+    private WeatherResponse getWeatherFromApi() {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/v1/forecast")
@@ -39,11 +39,11 @@ public class WeatherService {
                         .build())
                 .accept(MediaType.APPLICATION_JSON)  // 👈 Explicitly set acceptable response type
                 .retrieve()
-                .bodyToMono(MeteoResponse.class)
+                .bodyToMono(WeatherResponse.class)
                 .block();
     }
 
-    public MeteoResponse getWeather() {
+    public WeatherResponse getWeather() {
         return weatherCache.Get();
     }
 }

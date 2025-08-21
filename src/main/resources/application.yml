@@ -1,2 +1,5 @@
 server:
   port: 8080
+  tomcat:
+    keep-alive-timeout: 10m
+    max-keep-alive-requests: 36000
