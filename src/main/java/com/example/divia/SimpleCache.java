@@ -7,11 +7,16 @@ public class SimpleCache<T> {
     private final Supplier<T> cacheSetter;
     private LocalDateTime lastFetch = LocalDateTime.MIN;
     private T cached;
-    private final int durationInSeconds;
+    private int durationInSeconds;
 
     public SimpleCache(Supplier<T> cacheSetter, int durationInSeconds) {
         this.cacheSetter = cacheSetter;
         this.durationInSeconds = durationInSeconds;
+    }
+
+    public void setCacheDuration(int sec)
+    {
+        this.durationInSeconds = sec;
     }
 
     private boolean hasExpired() {

@@ -1,5 +1,6 @@
 package com.example.divia.model.divia;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.Duration;
@@ -24,5 +25,10 @@ public class HoraireResponse {
         var duration = Duration.between(currentTime, this.arrivesAt);
         this.secondsLeft = duration.getSeconds() % 60;
         this.minutesLeft = duration.toMinutes();
+    }
+
+    @JsonIgnore
+    public long getTotalSecondsLeft(){
+        return minutesLeft * 60 + secondsLeft;
     }
 }

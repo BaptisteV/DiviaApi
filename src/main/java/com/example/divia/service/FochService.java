@@ -18,6 +18,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -26,7 +27,9 @@ public class FochService {
     private final String lineName = " > DIJON Valmy";
     private final String stopId = "1467";
     private final String stopName = "Foch Gare";
-    private static final int TotemResponseCacheDurationInSeconds = 60;
+    private static final int CacheDuration = 60;
+    private static final int ShortCacheThreshold = 60;
+    private static final int CacheShortDuration = 10;
     private final SimpleCache<TotemResponse> cache;
 
     private final WebClient webClient;
@@ -39,12 +42,22 @@ public class FochService {
                 .codecs(configurer -> configurer
                         .defaultCodecs()
                         .maxInMemorySize(8 * 1024 * 1024)).build();
-        this.cache = new SimpleCache<>(this::getTotemFromApi, TotemResponseCacheDurationInSeconds);
+        this.cache = new SimpleCache<>(this::getTotemFromApi, CacheDuration);
     }
 
     public FochResponse getFoch() {
         TotemResponse response = cache.Get();
         response.refreshMinutesLeft();
+
+        // If the next tram arrives within the next minute, cache for 10 sec only
+        var next = response.getHoraires().stream().min(Comparator.comparing(HoraireResponse::getTotalSecondsLeft));
+        if(next.isPresent() && next.get().getTotalSecondsLeft() <= ShortCacheThreshold) {
+            cache.setCacheDuration(CacheShortDuration);
+        }
+        else {
+            cache.setCacheDuration(CacheDuration);
+        }
+
         return new FochResponse(response);
     }
 
